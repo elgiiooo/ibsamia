@@ -1181,11 +1181,45 @@ updateNextButton();
   });
 }
 
-// En DOMContentLoaded activa navegación para el primer step visible
 document.addEventListener('DOMContentLoaded', () => {
-  const firstStep = document.querySelector('.step.step-1');
-  if (firstStep) activateKeyboardNavigation(firstStep);
+  const form = document.getElementById('multi-step-form');
+  const steps = Array.from(form.querySelectorAll('.step'));
+  let currentStepIndex = steps.findIndex(step => step.classList.contains('visible'));
+
+  if (currentStepIndex === -1) currentStepIndex = 0;
+  activateKeyboardNavigation(steps[currentStepIndex]);
+
+  form.addEventListener('click', (event) => {
+    const nextBtn = event.target.closest('.next-step');
+    const prevBtn = event.target.closest('.prev-step');
+
+    if (nextBtn) {
+      event.preventDefault();
+
+      steps[currentStepIndex].classList.remove('visible');
+      currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
+      steps[currentStepIndex].classList.add('visible');
+
+      setTimeout(() => {
+        activateKeyboardNavigation(steps[currentStepIndex]);
+      }, 50);
+    }
+
+    if (prevBtn) {
+      event.preventDefault();
+
+      steps[currentStepIndex].classList.remove('visible');
+      currentStepIndex = Math.max(currentStepIndex - 1, 0);
+      steps[currentStepIndex].classList.add('visible');
+
+      setTimeout(() => {
+        activateKeyboardNavigation(steps[currentStepIndex]);
+      }, 50);
+    }
+  });
 });
+
+
 
 
 </script>
@@ -1195,4 +1229,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <?php
 }
-
