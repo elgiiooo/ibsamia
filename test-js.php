@@ -1102,37 +1102,41 @@ $(document).ready(function() {
 document.addEventListener('DOMContentLoaded', function () {
 function advanceStep() {
   const currentStep = document.querySelector('.step:not([style*="display: none"])');
-  if (!currentStep) return;
-
-  // Validar que se haya seleccionado una opción en el paso actual
   const selectedOption = currentStep.querySelector('input[type="radio"]:checked');
+
   if (!selectedOption) {
     alert('Por favor, selecciona una opción antes de continuar.');
     return;
   }
 
-  // Guardar la respuesta seleccionada si es necesario
-  // Por ejemplo, podrías almacenar las respuestas en un objeto:
-  // respuestas[`step${currentStep.dataset.step}`] = selectedOption.value;
-
-  // Ocultar el paso actual
+  // Oculta el paso actual
   currentStep.style.display = 'none';
 
-  // Mostrar el siguiente paso
+  // Muestra el siguiente paso
   const nextStep = currentStep.nextElementSibling;
   if (nextStep && nextStep.classList.contains('step')) {
     nextStep.style.display = 'block';
-
-    // Opcional: establecer el foco en el primer elemento interactivo del siguiente paso
+    // Opcional: enfocar el primer elemento del siguiente paso
     const firstInput = nextStep.querySelector('input, button');
-    if (firstInput) {
-      firstInput.focus();
-    }
+    if (firstInput) firstInput.focus();
   } else {
-    // Si no hay más pasos, podrías mostrar un resumen o enviar el formulario
-    console.log('Formulario completado.');
+    console.log("No hay más pasos.");
   }
 }
+	
+	// Evento teclado para seleccionar opciones con Espacio o Enter
+  document.querySelectorAll('.radio-option input').forEach(input => {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        this.checked = true;
+
+        // Opcional: enfocar el botón de siguiente paso
+        const nextButton = document.querySelector('.next-step');
+        if (nextButton) nextButton.focus();
+      }
+    });
+  });
 
 	
 	// Evento clic en el botón .next-step
