@@ -1098,6 +1098,155 @@ $(document).ready(function() {
 	
 });	
 });
+	
+document.addEventListener('DOMContentLoaded', function () {
+function advanceStep() {
+  const currentStep = document.querySelector('.step:not([style*="display: none"])');
+  if (!currentStep) return;
+
+  // Validar que se haya seleccionado una opción en el paso actual
+  const selectedOption = currentStep.querySelector('input[type="radio"]:checked');
+  if (!selectedOption) {
+    alert('Por favor, selecciona una opción antes de continuar.');
+    return;
+  }
+
+  // Guardar la respuesta seleccionada si es necesario
+  // Por ejemplo, podrías almacenar las respuestas en un objeto:
+  // respuestas[`step${currentStep.dataset.step}`] = selectedOption.value;
+
+  // Ocultar el paso actual
+  currentStep.style.display = 'none';
+
+  // Mostrar el siguiente paso
+  const nextStep = currentStep.nextElementSibling;
+  if (nextStep && nextStep.classList.contains('step')) {
+    nextStep.style.display = 'block';
+
+    // Opcional: establecer el foco en el primer elemento interactivo del siguiente paso
+    const firstInput = nextStep.querySelector('input, button');
+    if (firstInput) {
+      firstInput.focus();
+    }
+  } else {
+    // Si no hay más pasos, podrías mostrar un resumen o enviar el formulario
+    console.log('Formulario completado.');
+  }
+}
+
+	
+	// Evento clic en el botón .next-step
+document.querySelector('.next-step').addEventListener('click', function(e) {
+  e.preventDefault();
+  advanceStep();
+});
+
+// Evento tecla Enter cuando el botón .next-step tiene el foco
+document.querySelector('.next-step').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    advanceStep();
+  }
+});
+
+
+  const form = document.getElementById('multi-step-form');
+  if (!form) return;
+
+  // Todos los elementos focuseables: radio-options + botón
+  function getFocusableElements() {
+    const options = Array.from(form.querySelectorAll('.radio-option'));
+    const nextBtn = form.querySelector('.next-step');
+    return [...options, nextBtn];
+  }
+
+  let focusableElements = getFocusableElements();
+  let currentFocusIndex = 0;
+
+  // Inicial: focus en primer div
+  focusableElements[currentFocusIndex].focus();
+
+  // Actualiza visual de selección y aria
+  function selectOption(element) {
+    focusableElements.forEach(el => {
+      if (el.classList && el.classList.contains('radio-option')) {
+        el.classList.remove('selected');
+        el.setAttribute('aria-selected', 'false');
+        const input = el.querySelector('input[type="radio"]');
+        if (input) input.checked = false;
+      }
+    });
+
+    if (element.classList && element.classList.contains('radio-option')) {
+      element.classList.add('selected');
+      element.setAttribute('aria-selected', 'true');
+      const input = element.querySelector('input[type="radio"]');
+      if (input) input.checked = true;
+      // Habilita botón
+      const btn = form.querySelector('.next-step');
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  form.addEventListener('keydown', function (e) {
+    if (!focusableElements.length) return;
+
+    const key = e.key;
+
+    if (key === 'Tab') {
+      // No bloqueamos Tab, solo actualizamos índice
+      setTimeout(() => {
+        focusableElements = getFocusableElements(); // refresca si cambian los pasos
+        currentFocusIndex = focusableElements.indexOf(document.activeElement);
+        if (currentFocusIndex === -1) currentFocusIndex = 0;
+      }, 10);
+    }
+
+    if (key === 'ArrowDown' || key === 'ArrowRight') {
+      e.preventDefault();
+      currentFocusIndex = (currentFocusIndex + 1) % focusableElements.length;
+      focusableElements[currentFocusIndex].focus();
+    }
+
+    if (key === 'ArrowUp' || key === 'ArrowLeft') {
+      e.preventDefault();
+      currentFocusIndex = (currentFocusIndex - 1 + focusableElements.length) % focusableElements.length;
+      focusableElements[currentFocusIndex].focus();
+    }
+
+    if (key === 'Enter' || key === ' ') {
+      e.preventDefault();
+      const focused = document.activeElement;
+      if (focused.classList.contains('radio-option')) {
+        selectOption(focused);
+      } else if (focused.classList.contains('next-step') && !focused.disabled) {
+        // Simula click para avanzar
+        focused.click();
+      }
+    }
+  });
+
+  // También clic en div selecciona
+  focusableElements.forEach(el => {
+    if (el.classList.contains('radio-option')) {
+      el.addEventListener('click', () => {
+        selectOption(el);
+      });
+    }
+  });
+
+  // Al avanzar (botón click), vuelve a recalcular foco
+  form.querySelector('.next-step').addEventListener('click', function () {
+    // Aquí deberás añadir la lógica para cargar el siguiente step,
+    // luego refrescar focusableElements y poner focus en el primer div de la nueva step.
+    setTimeout(() => {
+      focusableElements = getFocusableElements();
+      currentFocusIndex = 0;
+      if (focusableElements.length) focusableElements[0].focus();
+    }, 100); // espera que cargue el siguiente step
+  });
+});
+
 </script>
 		
 
