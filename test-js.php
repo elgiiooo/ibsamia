@@ -1099,6 +1099,9 @@ $(document).ready(function() {
 });	
 });
 		// Función para activar la navegación accesible en el step dado
+const userSelections = {};
+let currentStepIndex = 0;
+
 function activateKeyboardNavigation(step) {
   const options = step.querySelectorAll('.radio-option');
   const nextBtn = step.querySelector('.next-step');
@@ -1120,7 +1123,6 @@ function activateKeyboardNavigation(step) {
     }
   }
 
-  // Seleccionar primera opción si no hay ninguna seleccionada
   if (!step.querySelector(`input[name="${inputName}"]:checked`)) {
     const firstRadio = options[0].querySelector('input[type="radio"]');
     if (firstRadio) {
@@ -1131,7 +1133,6 @@ function activateKeyboardNavigation(step) {
 
   updateNextButton();
 
-  // Poner foco en el elemento seleccionado o en la primera opción si no hay ninguno seleccionado
   const selectedOption = Array.from(options).find(opt => {
     const radio = opt.querySelector('input[type="radio"]');
     return radio && radio.checked;
@@ -1164,6 +1165,7 @@ function activateKeyboardNavigation(step) {
           radio.checked = true;
           radio.dispatchEvent(new Event('change', { bubbles: true }));
           updateNextButton();
+          userSelections[inputName] = radio.value;
         }
       }
     });
@@ -1174,6 +1176,7 @@ function activateKeyboardNavigation(step) {
         radio.checked = true;
         radio.dispatchEvent(new Event('change', { bubbles: true }));
         updateNextButton();
+        userSelections[inputName] = radio.value;
       }
     });
   });
@@ -1209,7 +1212,7 @@ function activateKeyboardNavigation(step) {
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('multi-step-form');
   const steps = Array.from(form.querySelectorAll('.step'));
-  let currentStepIndex = steps.findIndex(step => step.classList.contains('visible'));
+  currentStepIndex = steps.findIndex(step => step.classList.contains('visible'));
 
   if (currentStepIndex === -1) currentStepIndex = 0;
   activateKeyboardNavigation(steps[currentStepIndex]);
@@ -1221,10 +1224,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nextBtn) {
       event.preventDefault();
 
-      steps[currentStepIndex].classList.remove('visible');
-      currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
-      steps[currentStepIndex].classList.add('visible');
+      const currentStep = steps[currentStepIndex];
+      const input = currentStep.querySelector('input[type="radio"]:checked');
+      const inputName = input?.name;
+      const selectedValue = input?.value;
 
+      if (!input) return;
+
+      userSelections[inputName] = selectedValue;
+
+      // Oculta el paso actual
+      currentStep.classList.remove('visible');
+
+      // Busca un paso cuyo id coincida con el valor seleccionado
+      const nextStep = steps.find(s => s.id === selectedValue);
+
+      if (nextStep) {
+        currentStepIndex = steps.indexOf(nextStep);
+      } else {
+        // Si no hay un paso con ese id, ir al siguiente en orden
+        currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
+      }
+
+      steps[currentStepIndex].classList.add('visible');
       setTimeout(() => {
         activateKeyboardNavigation(steps[currentStepIndex]);
       }, 50);
@@ -1243,6 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 
 
 
