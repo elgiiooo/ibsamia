@@ -1100,7 +1100,7 @@ $(document).ready(function() {
 });
 		// Función para activar la navegación accesible en el step dado
 const userSelections = {};
-let currentStepIndex = 0;
+let stepHistory = []; // Guardará el historial de pasos visitados
 
 function activateKeyboardNavigation(step) {
   const options = step.querySelectorAll('.radio-option');
@@ -1212,9 +1212,10 @@ function activateKeyboardNavigation(step) {
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('multi-step-form');
   const steps = Array.from(form.querySelectorAll('.step'));
-  currentStepIndex = steps.findIndex(step => step.classList.contains('visible'));
+  let currentStepIndex = steps.findIndex(step => step.classList.contains('visible'));
 
   if (currentStepIndex === -1) currentStepIndex = 0;
+  stepHistory = [currentStepIndex];
   activateKeyboardNavigation(steps[currentStepIndex]);
 
   form.addEventListener('click', (event) => {
@@ -1229,20 +1230,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const inputName = input?.name;
       const selectedValue = input?.value;
 
-      if (!input) return;
+      if (!inputName || !selectedValue) return;
 
       userSelections[inputName] = selectedValue;
 
-      // Oculta el paso actual
+      // Reiniciar el historial desde el paso actual (importante)
+      stepHistory = stepHistory.slice(0, stepHistory.indexOf(currentStepIndex) + 1);
+      stepHistory.push(currentStepIndex);
+
       currentStep.classList.remove('visible');
 
-      // Busca un paso cuyo id coincida con el valor seleccionado
-      const nextStep = steps.find(s => s.id === selectedValue);
-
-      if (nextStep) {
-        currentStepIndex = steps.indexOf(nextStep);
+      // Buscar el paso cuyo ID coincida con el valor seleccionado
+      const targetStep = steps.find(s => s.id === selectedValue);
+      if (targetStep) {
+        currentStepIndex = steps.indexOf(targetStep);
       } else {
-        // Si no hay un paso con ese id, ir al siguiente en orden
         currentStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
       }
 
@@ -1256,9 +1258,15 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
 
       steps[currentStepIndex].classList.remove('visible');
-      currentStepIndex = Math.max(currentStepIndex - 1, 0);
-      steps[currentStepIndex].classList.add('visible');
 
+      if (stepHistory.length > 1) {
+        stepHistory.pop(); // Quitamos el actual
+        currentStepIndex = stepHistory[stepHistory.length - 1];
+      } else {
+        currentStepIndex = Math.max(currentStepIndex - 1, 0);
+      }
+
+      steps[currentStepIndex].classList.add('visible');
       setTimeout(() => {
         activateKeyboardNavigation(steps[currentStepIndex]);
       }, 50);
